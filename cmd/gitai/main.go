@@ -12,7 +12,7 @@ func main() {
 	app := &cli.App{
 		Name:     "gitai",
 		Usage:    "AI-native version control system",
-		Version:  "0.1.0-day3",
+		Version:  "0.1.0-day4",
 		Commands: []*cli.Command{},
 	}
 
@@ -69,6 +69,43 @@ func registerCommands(app *cli.App) {
 				},
 			},
 			Action: gitai.LogCmd,
+		},
+		&cli.Command{
+			Name:  "cost",
+			Usage: "Show cost analysis for tracked files",
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:    "model",
+					Aliases: []string{"m"},
+					Value:   "gpt-4o",
+					Usage:   "Model for cost calculation",
+				},
+				&cli.StringFlag{
+					Name:    "currency",
+					Aliases: []string{"c"},
+					Value:   "USD",
+					Usage:   "Preferred currency display (USD/CNY)",
+				},
+				&cli.StringFlag{
+					Name:    "by",
+					Value:   "file",
+					Usage:   "Aggregate by: file, section, role",
+				},
+			},
+			Action: gitai.CostCmd,
+		},
+		&cli.Command{
+			Name:  "price",
+			Usage: "List model pricing information",
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:    "currency",
+					Aliases: []string{"c"},
+					Value:   "USD",
+					Usage:   "Show prices in currency (USD/CNY)",
+				},
+			},
+			Action: gitai.PriceCmd,
 		},
 	)
 }
