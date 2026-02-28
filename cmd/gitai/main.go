@@ -12,7 +12,7 @@ func main() {
 	app := &cli.App{
 		Name:     "gitai",
 		Usage:    "AI-native version control system",
-		Version:  "0.1.0-day5",
+		Version:  "0.1.0-day6",
 		Commands: []*cli.Command{},
 	}
 
@@ -129,6 +129,12 @@ func registerCommands(app *cli.App) {
 				},
 			},
 			Action: gitai.PriceCmd,
+		},
+		&cli.Command{
+			Name:  "config",
+			Usage: "Manage GitAI configuration",
+			ArgsUsage: "[init|set|get|list|edit] [key] [value]",
+			Action:    gitai.ConfigCmd,
 		},
 	)
 }

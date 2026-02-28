@@ -124,6 +124,28 @@ func (cm *CostManager) CalculateCost(tokens int, modelName string) (usd, cny flo
 	return usd, cny, nil
 }
 
+// calculateCostWithPricing calculates cost using ModelPricing
+func calculateCostWithPricing(tokens int, pricing *ModelPricing) (usd, cny float64) {
+	// Assume 50% input, 50% output for estimation
+	inputTokens := float64(tokens) * 0.5
+	outputTokens := float64(tokens) * 0.5
+
+	inputCost := (inputTokens / 1000000) * pricing.InputPrice
+	outputCost := (outputTokens / 1000000) * pricing.OutputPrice
+	totalCost := inputCost + outputCost
+
+	// Convert to USD and CNY
+	if pricing.Currency == "USD" {
+		usd = totalCost
+		cny = totalCost * pricing.ExchangeRate
+	} else {
+		cny = totalCost
+		usd = totalCost / pricing.ExchangeRate
+	}
+
+	return usd, cny
+}
+
 // FormatCurrency formats a cost value for display
 func FormatCurrency(amount float64, currency string) string {
 	if currency == "USD" {
@@ -146,12 +168,19 @@ func CostCmd(c *cli.Context) error {
 		return fmt.Errorf(".gitai/ not initialized. Run 'gitai init' first")
 	}
 
-	// Get cost manager
-	costMgr := NewCostManager()
+	// Load configuration
+	config := MustLoadConfig(root)
 
 	// Parse options
 	model := c.String("model")
+	if model == "gpt-4o" && config.Model != "" {
+		// Use default model from config if user didn't override
+		model = config.Model
+	}
 	currency := c.String("currency")
+	if currency == "USD" && config.Currency != "" {
+		currency = config.Currency
+	}
 	aggregateBy := c.String("by") // "file", "section", "role"
 
 	// Get tracked files
@@ -170,16 +199,16 @@ func CostCmd(c *cli.Context) error {
 
 	switch aggregateBy {
 	case "section":
-		return showCostBySection(tracked, costMgr, model, currency)
+		return showCostBySection(tracked, config, model, currency)
 	case "role":
-		return showCostByRole(tracked, costMgr, model, currency)
+		return showCostByRole(tracked, config, model, currency)
 	default:
-		return showCostByFile(tracked, costMgr, model, currency, w)
+		return showCostByFile(tracked, config, model, currency, w)
 	}
 }
 
 // showCostByFile shows costs grouped by file
-func showCostByFile(tracked []TrackedFile, costMgr *CostManager, model, currency string, w *tabwriter.Writer) error {
+func showCostByFile(tracked []TrackedFile, config *Config, model, currency string, w *tabwriter.Writer) error {
 	fmt.Printf("Cost breakdown by file (model: %s)\n\n", model)
 
 	// Table header
@@ -191,10 +220,12 @@ func showCostByFile(tracked []TrackedFile, costMgr *CostManager, model, currency
 	totalCNY := 0.0
 
 	for _, f := range tracked {
-		usd, cny, err := costMgr.CalculateCost(f.Tokens, model)
+		pricing, err := config.GetModelPricing(model)
 		if err != nil {
 			continue
 		}
+
+		usd, cny := calculateCostWithPricing(f.Tokens, pricing)
 
 		totalTokens += f.Tokens
 		totalUSD += usd
@@ -231,7 +262,7 @@ func showCostByFile(tracked []TrackedFile, costMgr *CostManager, model, currency
 }
 
 // showCostBySection shows costs grouped by section
-func showCostBySection(tracked []TrackedFile, costMgr *CostManager, model, currency string) error {
+func showCostBySection(tracked []TrackedFile, config *Config, model, currency string) error {
 	fmt.Printf("Cost breakdown by section (model: %s)\n\n", model)
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
@@ -270,24 +301,28 @@ func showCostBySection(tracked []TrackedFile, costMgr *CostManager, model, curre
 		{"Other", token.SectionOther},
 	}
 
-	for _, s := range sections {
-		tokens := sectionTotals[s.typ]
-		if tokens == 0 {
-			continue
+	// Get pricing once
+	pricing, err := config.GetModelPricing(model)
+	if err == nil {
+		for _, s := range sections {
+			tokens := sectionTotals[s.typ]
+			if tokens == 0 {
+				continue
+			}
+
+			usd, cny := calculateCostWithPricing(tokens, pricing)
+
+			totalTokens += tokens
+			totalUSD += usd
+			totalCNY += cny
+
+			fmt.Fprintf(w, "%s\t%d\t%s\t%s\n",
+				s.name,
+				tokens,
+				FormatCurrency(usd, "USD"),
+				FormatCurrency(cny, "CNY"),
+			)
 		}
-
-		usd, cny, _ := costMgr.CalculateCost(tokens, model)
-
-		totalTokens += tokens
-		totalUSD += usd
-		totalCNY += cny
-
-		fmt.Fprintf(w, "%s\t%d\t%s\t%s\n",
-			s.name,
-			tokens,
-			FormatCurrency(usd, "USD"),
-			FormatCurrency(cny, "CNY"),
-		)
 	}
 
 	w.Flush()
@@ -304,7 +339,7 @@ func showCostBySection(tracked []TrackedFile, costMgr *CostManager, model, curre
 }
 
 // showCostByRole shows costs grouped by role
-func showCostByRole(tracked []TrackedFile, costMgr *CostManager, model, currency string) error {
+func showCostByRole(tracked []TrackedFile, config *Config, model, currency string) error {
 	fmt.Printf("Cost breakdown by role (model: %s)\n\n", model)
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
@@ -331,7 +366,12 @@ func showCostByRole(tracked []TrackedFile, costMgr *CostManager, model, currency
 	totalCNY := 0.0
 
 	for role, tokens := range roleTotals {
-		usd, cny, _ := costMgr.CalculateCost(tokens, model)
+		pricing, err := config.GetModelPricing(model)
+		if err != nil {
+			continue
+		}
+
+		usd, cny := calculateCostWithPricing(tokens, pricing)
 
 		totalTokens += tokens
 		totalUSD += usd
@@ -391,12 +431,22 @@ func defaultPricingForModel(model string) (*ModelPricing, error) {
 
 // PriceCmd lists available model pricing
 func PriceCmd(c *cli.Context) error {
+	// Get git root
+	_, root := MustGetGitRepo()
+
+	// Load config
+	config, err := LoadConfig(root)
+	if err != nil {
+		// Fall back to default config
+		config = DefaultConfig()
+	}
+
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 
 	fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", "Model", "Provider", "Input", "Output")
 	fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", "-----", "--------", "-----", "------")
 
-	for _, p := range defaultPricing {
+	for _, p := range config.Models {
 		var inputPrice, outputPrice string
 		if p.Currency == "USD" {
 			inputPrice = fmt.Sprintf("$%.2f/M", p.InputPrice)
@@ -406,7 +456,13 @@ func PriceCmd(c *cli.Context) error {
 			outputPrice = fmt.Sprintf("¥%.2f/M", p.OutputPrice)
 		}
 
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n",
+		marker := ""
+		if p.Name == config.Model {
+			marker = "*"
+		}
+
+		fmt.Fprintf(w, "%s%s\t%s\t%s\t%s\n",
+			marker,
 			p.Name,
 			p.Provider,
 			inputPrice,
@@ -416,8 +472,8 @@ func PriceCmd(c *cli.Context) error {
 
 	w.Flush()
 
-	fmt.Printf("\nDefault model: gpt-4o\n")
-	fmt.Printf("Exchange rate: 1 USD = %.2f CNY\n", 7.20)
+	fmt.Printf("\n* = default model\n")
+	fmt.Printf("Exchange rate: 1 USD = %.2f CNY\n", config.ExchangeRate)
 
 	return nil
 }
