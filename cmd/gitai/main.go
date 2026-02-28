@@ -12,11 +12,10 @@ func main() {
 	app := &cli.App{
 		Name:     "gitai",
 		Usage:    "AI-native version control system",
-		Version:  "0.1.0-day4",
+		Version:  "0.1.0-day5",
 		Commands: []*cli.Command{},
 	}
 
-	// Register commands
 	registerCommands(app)
 
 	if err := app.Run(os.Args); err != nil {
@@ -91,8 +90,32 @@ func registerCommands(app *cli.App) {
 					Value:   "file",
 					Usage:   "Aggregate by: file, section, role",
 				},
+				&cli.BoolFlag{
+					Name:    "user",
+					Aliases: []string{"u"},
+					Usage:   "Show cost breakdown by user (overrides --by)",
+				},
+				&cli.BoolFlag{
+					Name:    "branch",
+					Aliases: []string{"b"},
+					Usage:   "Show cost breakdown by branch (overrides --by)",
+				},
+				&cli.IntFlag{
+					Name:    "limit",
+					Aliases: []string{"n"},
+					Value:   50,
+					Usage:   "Number of commits to analyze (for --user)",
+				},
 			},
-			Action: gitai.CostCmd,
+			Action: func(c *cli.Context) error {
+				if c.Bool("user") {
+					return gitai.CostByUserCmd(c)
+				}
+				if c.Bool("branch") {
+					return gitai.CostByBranchCmd(c)
+				}
+				return gitai.CostCmd(c)
+			},
 		},
 		&cli.Command{
 			Name:  "price",
@@ -102,7 +125,7 @@ func registerCommands(app *cli.App) {
 					Name:    "currency",
 					Aliases: []string{"c"},
 					Value:   "USD",
-					Usage:   "Show prices in currency (USD/CNY)",
+					Usage:  "Show prices in currency (USD/CNY)",
 				},
 			},
 			Action: gitai.PriceCmd,
