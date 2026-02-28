@@ -12,7 +12,7 @@ func main() {
 	app := &cli.App{
 		Name:     "gitai",
 		Usage:    "AI-native version control system",
-		Version:  "0.1.0-day6",
+		Version:  "1.0.0",
 		Commands: []*cli.Command{},
 	}
 
@@ -132,9 +132,32 @@ func registerCommands(app *cli.App) {
 		},
 		&cli.Command{
 			Name:  "config",
-			Usage: "Manage GitAI configuration",
+			Usage:  "Manage GitAI configuration",
 			ArgsUsage: "[init|set|get|list|edit] [key] [value]",
 			Action:    gitai.ConfigCmd,
+		},
+		&cli.Command{
+			Name:  "review",
+			Usage: "Review prompt files for quality and improvement suggestions",
+			Flags: []cli.Flag{
+				&cli.BoolFlag{
+					Name:    "detailed",
+					Aliases: []string{"d"},
+					Usage:   "Show detailed suggestions for each file",
+				},
+				&cli.Float64Flag{
+					Name:    "min-score",
+					Aliases: []string{"m"},
+					Value:   0,
+					Usage:   "Only show files with score below this threshold",
+				},
+			},
+			Action: gitai.ReviewCmd,
+		},
+		&cli.Command{
+			Name:  "quality",
+			Usage: "Show quick quality overview of all prompts",
+			Action: gitai.QualityCmd,
 		},
 	)
 }
