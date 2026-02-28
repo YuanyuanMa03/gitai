@@ -12,7 +12,7 @@ func main() {
 	app := &cli.App{
 		Name:     "gitai",
 		Usage:    "AI-native version control system",
-		Version:  "1.0.0",
+		Version:  "1.1.0",
 		Commands: []*cli.Command{},
 	}
 
@@ -158,6 +158,93 @@ func registerCommands(app *cli.App) {
 			Name:  "quality",
 			Usage: "Show quick quality overview of all prompts",
 			Action: gitai.QualityCmd,
+		},
+		&cli.Command{
+			Name:  "export",
+			Usage: "Export tracked files to JSON or CSV",
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:    "format",
+					Aliases: []string{"f"},
+					Value:   "json",
+					Usage:   "Export format: json or csv",
+				},
+				&cli.StringFlag{
+					Name:    "output",
+					Aliases: []string{"o"},
+					Value:   "",
+					Usage:   "Output filename (default: gitai-export-TIMESTAMP.{json,csv})",
+				},
+				&cli.BoolFlag{
+					Name:    "include-config",
+					Aliases: []string{"c"},
+					Usage:   "Include configuration in JSON export",
+				},
+			},
+			Action: gitai.ExportCmd,
+		},
+		&cli.Command{
+			Name:  "import",
+			Usage: "Import tracked files from export file",
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:    "input",
+					Aliases: []string{"i"},
+					Usage:   "Input file path (required)",
+				},
+				&cli.BoolFlag{
+					Name:    "merge",
+					Aliases: []string{"m"},
+					Usage:   "Merge with existing tracked files",
+				},
+				&cli.BoolFlag{
+					Name:    "force",
+					Aliases: []string{"f"},
+					Usage:   "Force overwrite existing entries",
+				},
+			},
+			Action: gitai.ImportCmd,
+		},
+		&cli.Command{
+			Name:      "search",
+			Usage:     "Search across tracked prompt files",
+			ArgsUsage: "<query>",
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:    "role",
+					Aliases: []string{"r"},
+					Usage:   "Filter by role",
+				},
+				&cli.IntFlag{
+					Name:    "max",
+					Aliases: []string{"n"},
+					Value:   0,
+					Usage:   "Maximum results to show (0 = unlimited)",
+				},
+				&cli.IntFlag{
+					Name:    "context",
+					Aliases: []string{"C"},
+					Value:   0,
+					Usage:   "Number of context lines to show",
+				},
+				&cli.BoolFlag{
+					Name:    "regex",
+					Aliases: []string{"e"},
+					Usage:   "Use regex pattern matching",
+				},
+				&cli.BoolFlag{
+					Name:    "case-sensitive",
+					Aliases: []string{"c"},
+					Usage:   "Case-sensitive search",
+				},
+			},
+			Action: gitai.SearchCmd,
+		},
+		&cli.Command{
+			Name:      "find-role",
+			Usage:     "Find files by role pattern",
+			ArgsUsage: "<pattern>",
+			Action:    gitai.FindByRoleCmd,
 		},
 	)
 }
