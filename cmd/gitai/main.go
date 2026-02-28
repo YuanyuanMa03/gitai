@@ -12,7 +12,7 @@ func main() {
 	app := &cli.App{
 		Name:     "gitai",
 		Usage:    "AI-native version control system",
-		Version:  "0.1.0-day2",
+		Version:  "0.1.0-day3",
 		Commands: []*cli.Command{},
 	}
 
@@ -50,6 +50,25 @@ func registerCommands(app *cli.App) {
 			Usage:     "Show detailed information about a tracked file",
 			ArgsUsage: "<file.prompt>",
 			Action:    gitai.ShowCmd,
+		},
+		&cli.Command{
+			Name:      "diff",
+			Usage:     "Compare two versions of a prompt file",
+			ArgsUsage: "<file.prompt> [commit-a] [commit-b]",
+			Action:    gitai.DiffCmd,
+		},
+		&cli.Command{
+			Name:  "log",
+			Usage: "Show commit history with token deltas",
+			Flags: []cli.Flag{
+				&cli.IntFlag{
+					Name:    "limit",
+					Aliases: []string{"n"},
+					Value:   10,
+					Usage:   "Number of commits to show",
+				},
+			},
+			Action: gitai.LogCmd,
 		},
 	)
 }
