@@ -12,7 +12,7 @@ func main() {
 	app := &cli.App{
 		Name:     "gitai",
 		Usage:    "AI-native version control system",
-		Version:  "1.4.0",
+		Version:  "1.5.0",
 		Commands: []*cli.Command{},
 	}
 
@@ -446,6 +446,32 @@ func registerCommands(app *cli.App) {
 				},
 			},
 			Action: gitai.FeedbackCmd,
+		},
+		&cli.Command{
+			Name:  "hooks",
+			Usage: "Manage GitAI hooks",
+			Subcommands: []*cli.Command{
+				{
+					Name:   "install",
+					Usage:  "Install GitAI hooks to .git/hooks/",
+					Action: gitai.HooksInstallCmd,
+				},
+				{
+					Name:   "uninstall",
+					Usage:  "Uninstall GitAI hooks",
+					Action: gitai.HooksUninstallCmd,
+				},
+			},
+		},
+		&cli.Command{
+			Name:  "pre-commit-check",
+			Usage: "Run pre-commit quality checks (called by hook)",
+			Action: gitai.PreCommitCheckCmd,
+		},
+		&cli.Command{
+			Name:  "post-commit-record",
+			Usage: "Record intent after commit (called by hook)",
+			Action: gitai.PostCommitRecordCmd,
 		},
 	)
 }
