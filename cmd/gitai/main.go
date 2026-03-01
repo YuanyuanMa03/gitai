@@ -12,7 +12,7 @@ func main() {
 	app := &cli.App{
 		Name:     "gitai",
 		Usage:    "AI-native version control system",
-		Version:  "1.3.0",
+		Version:  "1.4.0",
 		Commands: []*cli.Command{},
 	}
 
@@ -434,6 +434,18 @@ func registerCommands(app *cli.App) {
 			Name:  "show-deps",
 			Usage: "Show all tracked dependencies",
 			Action: gitai.ShowDependenciesCmd,
+		},
+		&cli.Command{
+			Name:  "feedback",
+			Usage: "Record and manage feedback on commits/intents",
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:    "reason",
+					Aliases: []string{"r"},
+					Usage:   "Reason for feedback",
+				},
+			},
+			Action: gitai.FeedbackCmd,
 		},
 	)
 }
