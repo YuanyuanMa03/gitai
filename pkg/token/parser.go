@@ -29,6 +29,7 @@ type PromptSection struct {
 // ParsedPrompt represents a fully parsed .prompt file
 type ParsedPrompt struct {
 	Role        string
+	Category    string
 	Task        string
 	Constraints string
 	Examples    string

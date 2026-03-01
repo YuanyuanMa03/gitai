@@ -12,7 +12,7 @@ func main() {
 	app := &cli.App{
 		Name:     "gitai",
 		Usage:    "AI-native version control system",
-		Version:  "1.1.0",
+		Version:  "1.2.0",
 		Commands: []*cli.Command{},
 	}
 
@@ -245,6 +245,127 @@ func registerCommands(app *cli.App) {
 			Usage:     "Find files by role pattern",
 			ArgsUsage: "<pattern>",
 			Action:    gitai.FindByRoleCmd,
+		},
+		&cli.Command{
+			Name:  "template",
+			Usage: "Manage prompt templates",
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:    "name",
+					Aliases: []string{"n"},
+					Usage:   "Template name",
+				},
+				&cli.StringFlag{
+					Name:    "category",
+					Aliases: []string{"c"},
+					Usage:   "Template category",
+				},
+				&cli.StringFlag{
+					Name:    "from",
+					Aliases: []string{"f"},
+					Usage:   "Create from existing file",
+				},
+				&cli.StringFlag{
+					Name:    "description",
+					Aliases: []string{"d"},
+					Usage:   "Template description",
+				},
+				&cli.StringFlag{
+					Name:    "output",
+					Aliases: []string{"o"},
+					Usage:   "Output file for 'use' command",
+				},
+				&cli.StringSliceFlag{
+					Name:    "var",
+					Usage:   "Variable substitutions (key=value)",
+				},
+			},
+			Action: gitai.TemplateCmd,
+		},
+		&cli.Command{
+			Name:  "tag",
+			Usage: "Manage tags for tracked files",
+			Subcommands: []*cli.Command{
+				{
+					Name:      "add",
+					Usage:     "Add tags to a file",
+					ArgsUsage: "<file> <tag1> [tag2 ...]",
+					Action:    gitai.TagCmd,
+				},
+				{
+					Name:      "remove",
+					Aliases:   []string{"rm"},
+					Usage:     "Remove tags from a file",
+					ArgsUsage: "<file> <tag1> [tag2 ...]",
+					Action:    gitai.TagCmd,
+				},
+				{
+					Name:      "set",
+					Usage:     "Set tags for a file (replaces existing)",
+					ArgsUsage: "<file> <tag1> [tag2 ...]",
+					Action:    gitai.TagCmd,
+				},
+				{
+					Name:      "list",
+					Aliases:   []string{"ls"},
+					Usage:     "List tags for a file",
+					ArgsUsage: "<file>",
+					Action:    gitai.TagCmd,
+				},
+				{
+					Name:      "search",
+					Usage:     "Search files by tag",
+					ArgsUsage: "<tag>",
+					Action:    gitai.TagCmd,
+				},
+			},
+			Action: gitai.TagCmd,
+		},
+		&cli.Command{
+			Name:  "stats",
+			Usage: "Show comprehensive statistics dashboard",
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:    "model",
+					Aliases: []string{"m"},
+					Value:   "gpt-4o",
+					Usage:   "Model for cost calculation",
+				},
+				&cli.BoolFlag{
+					Name:    "verbose",
+					Aliases: []string{"v"},
+					Usage:   "Show verbose output",
+				},
+			},
+			Action: gitai.StatsCmd,
+		},
+		&cli.Command{
+			Name:  "trend",
+			Usage: "Show token growth trend over time",
+			Flags: []cli.Flag{
+				&cli.IntFlag{
+					Name:    "days",
+					Aliases: []string{"d"},
+					Value:   30,
+					Usage:   "Number of days to show",
+				},
+			},
+			Action: gitai.TrendCmd,
+		},
+		&cli.Command{
+			Name:  "compare",
+			Usage: "Compare statistics between two points",
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:  "a",
+					Usage: "First commit or reference",
+				},
+				&cli.StringFlag{
+					Name:  "b",
+					Usage: "Second commit or reference",
+				},
+			},
+			Action: gitai.CompareCmd,
 		},
 	)
 }
