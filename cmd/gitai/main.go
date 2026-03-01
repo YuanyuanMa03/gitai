@@ -12,7 +12,7 @@ func main() {
 	app := &cli.App{
 		Name:     "gitai",
 		Usage:    "AI-native version control system",
-		Version:  "1.2.0",
+		Version:  "1.3.0",
 		Commands: []*cli.Command{},
 	}
 
@@ -366,6 +366,51 @@ func registerCommands(app *cli.App) {
 				},
 			},
 			Action: gitai.CompareCmd,
+		},
+		&cli.Command{
+			Name:  "commit",
+			Usage: "Create a commit with intent tracking",
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:    "message",
+					Aliases: []string{"m"},
+					Usage:   "Commit message",
+				},
+				&cli.BoolFlag{
+					Name:    "edit",
+					Aliases: []string{"e"},
+					Usage:   "Open editor for commit message",
+				},
+				&cli.BoolFlag{
+					Name:    "intent-only",
+					Aliases: []string{"i"},
+					Usage:   "Save intent without creating commit",
+				},
+				&cli.BoolFlag{
+					Name:    "dry-run",
+					Aliases: []string{"n"},
+					Usage:   "Show intent without committing",
+				},
+			},
+			Action: gitai.CommitCmd,
+		},
+		&cli.Command{
+			Name:  "intent-log",
+			Usage: "Show intent history",
+			Flags: []cli.Flag{
+				&cli.IntFlag{
+					Name:    "limit",
+					Aliases: []string{"n"},
+					Value:   20,
+					Usage:   "Number of intents to show",
+				},
+				&cli.StringFlag{
+					Name:    "category",
+					Aliases: []string{"c"},
+					Usage:   "Filter by category",
+				},
+			},
+			Action: gitai.LogIntentsCmd,
 		},
 	)
 }
