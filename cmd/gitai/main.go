@@ -12,7 +12,7 @@ func main() {
 	app := &cli.App{
 		Name:     "gitai",
 		Usage:    "AI-native version control system",
-		Version:  "1.5.0",
+		Version:  "2.0.0",
 		Commands: []*cli.Command{},
 	}
 
@@ -472,6 +472,17 @@ func registerCommands(app *cli.App) {
 			Name:  "post-commit-record",
 			Usage: "Record intent after commit (called by hook)",
 			Action: gitai.PostCommitRecordCmd,
+		},
+		&cli.Command{
+			Name:  "insights",
+			Usage: "Show AI-era insights from tracked data",
+			Action: gitai.InsightsCmd,
+		},
+		&cli.Command{
+			Name:      "trace",
+			Usage:     "Trace intent to code or code to intent",
+			ArgsUsage: "<intent-id|file-path>",
+			Action:    gitai.TraceCmd,
 		},
 	)
 }
