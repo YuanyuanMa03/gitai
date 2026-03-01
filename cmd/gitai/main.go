@@ -412,5 +412,28 @@ func registerCommands(app *cli.App) {
 			},
 			Action: gitai.LogIntentsCmd,
 		},
+		&cli.Command{
+			Name:      "impact",
+			Usage:     "Analyze impact of changing a prompt",
+			ArgsUsage: "<prompt-file>",
+			Flags: []cli.Flag{
+				&cli.BoolFlag{
+					Name:    "verbose",
+					Aliases: []string{"v"},
+					Usage:   "Show detailed analysis",
+				},
+			},
+			Action: gitai.ImpactCmd,
+		},
+		&cli.Command{
+			Name:  "scan-deps",
+			Usage: "Auto-scan and detect prompt dependencies",
+			Action: gitai.ScanDependenciesCmd,
+		},
+		&cli.Command{
+			Name:  "show-deps",
+			Usage: "Show all tracked dependencies",
+			Action: gitai.ShowDependenciesCmd,
+		},
 	)
 }
